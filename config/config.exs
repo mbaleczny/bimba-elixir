@@ -10,18 +10,18 @@
 import Config
 
 # Configure Mix tasks and generators
-config :verve,
-  ecto_repos: [Verve.Repo]
+config :postgres,
+  ecto_repos: [Postgres.Repo]
 
-config :verve_web,
-  ecto_repos: [Verve.Repo],
-  generators: [context_app: :verve]
+config :web,
+  ecto_repos: [Postgres.Repo],
+  generators: [context_app: :postgres]
 
 # Configures the endpoint
-config :verve_web, VerveWeb.Endpoint,
+config :web, Web.Endpoint,
   url: [host: "localhost"],
-  render_errors: [view: VerveWeb.ErrorView, accepts: ~w(json), layout: false],
-  pubsub_server: Verve.PubSub,
+  render_errors: [view: Web.ErrorView, accepts: ~w(json), layout: false],
+  pubsub_server: Postgres.PubSub,
   live_view: [signing_salt: "Hd8R+U73"]
 
 # Configures Elixir's Logger

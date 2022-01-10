@@ -1,3 +1,0 @@
-# Verve
-
-**TODO: Add description**
