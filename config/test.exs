@@ -9,7 +9,7 @@ config :postgres, Postgres.Repo,
   username: "postgres",
   password: "postgres",
   hostname: "localhost",
-  database: "postgres_test#{System.get_env("MIX_TEST_PARTITION")}",
+  database: "bimba_elixir_test#{System.get_env("MIX_TEST_PARTITION")}",
   pool: Ecto.Adapters.SQL.Sandbox,
   pool_size: 10
 

@@ -30,6 +30,7 @@ defmodule Web.MixProject do
 
   defp deps do
     [
+      {:cors_plug, "~> 2.0"},
       {:gettext, "~> 0.18"},
       {:jason, "~> 1.2"},
       {:phoenix, "~> 1.6.5"},

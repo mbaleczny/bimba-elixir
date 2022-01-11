@@ -2,11 +2,21 @@ defmodule Web.Router do
   use Web, :router
 
   pipeline :api do
+    plug(CORSPlug,
+      origin: [
+        "https://bimba.app",
+        "http://localhost:3000"
+      ]
+    )
+
     plug(:accepts, ["json"])
   end
 
   scope "/api", Web do
     pipe_through(:api)
+
+    post("/request", V1.MainController, :request)
+    post("/search", V1.MainController, :search)
   end
 
   # Enables LiveDashboard only for development

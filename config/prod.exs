@@ -10,7 +10,9 @@ import Config
 # which you should run after static files are built and
 # before starting your production server.
 config :web, Web.Endpoint,
-  url: [host: "example.com", port: 80],
+  url: [host: "bimba.app", port: 80],
+  server: true,
+  code_reloader: false,
   cache_static_manifest: "priv/static/cache_manifest.json"
 
 # ## SSL Support
