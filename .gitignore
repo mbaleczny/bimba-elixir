@@ -151,4 +151,10 @@ modules.xml
 # Support for Project snippet scope
 !.vscode/*.code-snippets
 
+### macOS ###
+# General
+.DS_Store
+.AppleDouble
+.LSOverride
+
 # End of https://www.toptal.com/developers/gitignore/api/intellij+all,visualstudiocode,elixir,phoenix
