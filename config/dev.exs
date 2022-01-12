@@ -58,3 +58,5 @@ config :phoenix, :plug_init_mode, :runtime
 # Set a higher stacktrace during development. Avoid configuring such
 # in production as building large stacktraces may be expensive.
 config :phoenix, :stacktrace_depth, 20
+
+config :ztm, :api_token, System.get_env("ZTM_API_TOKEN")

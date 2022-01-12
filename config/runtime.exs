@@ -52,4 +52,6 @@ if config_env() == :prod do
   #
   # Then you can assemble a release by calling `mix release`.
   # See `mix help release` for more information.
+
+  config :ztm, :api_token, System.fetch_env!("ZTM_API_TOKEN")
 end

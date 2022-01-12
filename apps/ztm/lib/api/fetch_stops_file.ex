@@ -4,7 +4,9 @@ defmodule Ztm.Api.FetchStopsFile do
   plug(Tesla.Middleware.BaseUrl, "https://www.ztm.poznan.pl/pl/dla-deweloperow")
   plug(Tesla.Middleware.Logger)
 
-  @token "your-token"
+  def call do
+    token = Application.get_env(:ztm, :api_token)
 
-  def call, do: get("/getGTFSFile", query: [token: @token])
+    get("/getGTFSFile", query: [token: token])
+  end
 end
