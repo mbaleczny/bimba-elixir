@@ -1,18 +1,9 @@
 defmodule Ztm do
-  @moduledoc """
-  Documentation for `Ztm`.
-  """
+  defdelegate get_all_by_pattern(pattern),
+    to: Ztm.Stops.GetAllByPattern,
+    as: :call
 
-  @doc """
-  Hello world.
-
-  ## Examples
-
-      iex> Ztm.hello()
-      :world
-
-  """
-  def hello do
-    :world
-  end
+  defdelegate peka_api_request(body),
+    to: Ztm.Api.PekaRequest,
+    as: :call
 end

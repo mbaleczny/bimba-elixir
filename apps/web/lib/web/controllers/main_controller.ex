@@ -2,7 +2,7 @@ defmodule Web.V1.MainController do
   use Web, :controller
 
   def request(conn, params) do
-    case Ztm.Api.PekaRequest.call(params) do
+    case Ztm.peka_api_request(params) do
       {:ok, %Tesla.Env{status: 200, body: body}} ->
         json(conn, body)
 
@@ -13,8 +13,8 @@ defmodule Web.V1.MainController do
     end
   end
 
-  def search(conn, %{"pattern" => query}) do
-    stops = Ztm.ListStopPointsByName.call(query)
+  def search(conn, %{"pattern" => pattern}) do
+    stops = Ztm.get_all_by_pattern(pattern)
 
     conn |> render("stops.json", stops: stops)
   end
