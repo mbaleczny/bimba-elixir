@@ -1,4 +1,4 @@
-defmodule Ztm.DownloadStops do
+defmodule Ztm.Tasks.DownloadStops do
   require Logger
 
   @spec call() :: {:ok, binary()} | {:error, :unssucessful_download} | {:error, :unknown}

@@ -1,45 +1,59 @@
 defmodule Ztm.Workers.ImportStops do
   require Logger
 
-  alias Ztm.Stop
-
   @stops_file "stops.txt"
 
   def call do
-    case Ztm.DownloadStops.call() do
-      {:ok, file} ->
-        extract_contents(file)
-        |> get_stops_file()
-        |> parse_stops()
-        |> update_stops()
+    with {:download_stops, {:ok, zip_file_path}} <-
+           {:download_stops, Ztm.Tasks.DownloadStops.call()},
+         {:extract_contents, {:ok, contents}} <-
+           {:extract_contents, extract_contents(zip_file_path)},
+         {:extract_stops_file, {:ok, stops_file_path}} <-
+           {:extract_stops_file, extract_stops_file(contents)},
+         {:parse_stops, {:ok, rows}} <- {:parse_stops, parse_stops(stops_file_path)},
+         {:replace_stops, {:ok, :success}} <-
+           {:replace_stops, Ztm.Stops.Stop.replace_all_with(rows)},
+         {:clean_up, :ok} <- {:clean_up, remove_zip_file_and_extracted_folder(zip_file_path)} do
+      _ = Logger.debug("Removed temporary files")
 
-        case remove_zip_file_and_extracted_folder(file) do
-          :ok ->
-            Logger.info("Removed temporary files")
+      :ok
+    else
+      {:download_stops, reason} ->
+        _ = Logger.error("Error while downloading stops, reason: #{inspect(reason)}")
 
-            :ok
+        :error
 
-          error ->
-            error
-        end
+      {:extract_contents, reason} ->
+        _ = Logger.error("Error while extracting zip file, reason: #{inspect(reason)}")
+
+        :error
+
+      {:extract_stops_file, reason} ->
+        _ = Logger.error("Error while extracting stops file, reason: #{inspect(reason)}")
+
+        :error
+
+      {:parse_stops, reason} ->
+        _ = Logger.error("Error while parsing stops records, reason: #{inspect(reason)}")
+
+        :error
+
+      {:replace_stops, reason} ->
+        _ =
+          Logger.error("Error while replacing stops database records, reason: #{inspect(reason)}")
+
+        :error
+
+      {:clean_up, reason} ->
+        _ = Logger.error("Error while clean up, reason: #{inspect(reason)}")
+
+        :error
 
       {:error, reason} ->
-        Logger.info(reason)
+        _ = Logger.error("Unknown error while importing stops, reason: #{inspect(reason)}")
 
-        {:error, reason}
+        :error
     end
-  end
-
-  defp update_stops(%{results: results, errors: errors}) do
-    case results do
-      [] ->
-        Logger.info("Empty results array.")
-
-      _ ->
-        Stop.update_stops(results)
-    end
-
-    Logger.info("Imported stops errors: #{errors}")
   end
 
   defp remove_zip_file_and_extracted_folder(file) do
@@ -52,53 +66,34 @@ defmodule Ztm.Workers.ImportStops do
     File.rm(file)
   end
 
-  defp get_stops_file({:ok, contents}) do
-    file =
-      contents
-      |> Enum.map(&to_string/1)
-      |> Enum.find(nil, &String.ends_with?(&1, @stops_file))
-
-    if file != nil do
-      {:ok, file}
-    else
-      {:error, "Missing stops.txt file"}
+  defp extract_stops_file(contents) when is_list(contents) do
+    contents
+    |> Enum.map(&to_string/1)
+    |> Enum.find(nil, &String.ends_with?(&1, @stops_file))
+    |> case do
+      nil -> {:error, "Missing stops.txt file"}
+      file_path -> {:ok, file_path}
     end
   end
 
-  defp get_stops_file({:error, _} = result), do: result
-
-  defp extract_contents(file_path) when file_path != nil and is_binary(file_path) do
+  defp extract_contents(file_path) when is_binary(file_path) do
     folder = get_extract_folder(file_path)
     _ = File.mkdir(folder)
 
-    :zip.unzip(~c'#{file_path}', [{:cwd, ~c'#{folder}'}])
+    :zip.unzip(~c'#{file_path}', [{:cwd, ~c'/tmp'}])
   end
 
-  defp extract_contents(_) do
-    {:error, "Missing zip file"}
+  defp get_extract_folder(filename) when is_binary(filename) do
+    String.replace(filename, ".zip", "/")
   end
 
-  def get_extract_folder(zip_file) do
-    String.replace(zip_file, ".zip", "/")
+  defp parse_stops(file_path) do
+    file_path
+    |> File.stream!()
+    |> CSV.decode!(headers: true, separator: ?,)
+    |> Enum.to_list()
+    |> then(&{:ok, &1})
+  catch
+    reason -> {:error, reason}
   end
-
-  defp parse_stops({:ok, path}) do
-    File.stream!(path)
-    |> CSV.decode(headers: true, separator: ?,)
-    |> Enum.map(fn
-      {:ok, x} -> {:ok, Stop.changeset(%Stop{}, x)}
-      err -> err
-    end)
-    |> Enum.reduce(
-      %{results: [], errors: []},
-      fn el, %{results: results, errors: errors} = acc ->
-        case el do
-          {:ok, ch} -> %{acc | results: results ++ [ch]}
-          {:error, err} -> %{acc | errors: errors ++ [err]}
-        end
-      end
-    )
-  end
-
-  defp parse_stops({:error, error}), do: %{results: nil, errors: [error]}
 end
