@@ -1,7 +1,7 @@
 defmodule Ztm.Tasks.DownloadStops do
   require Logger
 
-  @spec call() :: {:ok, binary()} | {:error, :unssucessful_download} | {:error, :unknown}
+  @spec call() :: {:ok, nonempty_binary()} | {:error, :unssucessful_download | :unknown}
   def call do
     case Ztm.Api.FetchStopsFile.call() do
       {:ok, %Tesla.Env{status: 200, body: body, headers: headers}} ->
@@ -33,7 +33,7 @@ defmodule Ztm.Tasks.DownloadStops do
   defp write_to_file(path, body) do
     with {:ok, file} <- File.open(path, [:write]),
          :ok <- IO.binwrite(file, body) do
-      File.close(file)
+      :ok = File.close(file)
 
       {:ok, path}
     else

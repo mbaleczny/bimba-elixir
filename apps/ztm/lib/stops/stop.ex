@@ -17,13 +17,6 @@ defmodule Ztm.Stops.Stop do
 
   @fields [:stop_id, :stop_code, :stop_name, :stop_lat, :stop_lon, :zone_id]
 
-  @spec create(map()) :: {:ok, __MODULE__.t()} | {:error, Ecto.Changeset.t()}
-  def create(params) do
-    __MODULE__
-    |> cast(params, @fields)
-    |> Repo.insert()
-  end
-
   @spec delete_by_id(binary()) :: {integer(), [term()]}
   def delete_by_id(id) do
     __MODULE__

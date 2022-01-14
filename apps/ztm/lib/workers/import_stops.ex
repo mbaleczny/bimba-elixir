@@ -56,14 +56,11 @@ defmodule Ztm.Workers.ImportStops do
     end
   end
 
-  defp remove_zip_file_and_extracted_folder(file) do
-    folder = get_extract_folder(file)
-
-    if String.match?(folder, ~r/\/tmp\/\w+/) do
-      File.rm_rf(folder)
+  defp remove_zip_file_and_extracted_folder(file_path) when is_binary(file_path) do
+    case File.rm(file_path) do
+      :ok -> file_path |> Path.dirname() |> File.rmdir()
+      error -> error
     end
-
-    File.rm(file)
   end
 
   defp extract_stops_file(contents) when is_list(contents) do
@@ -77,14 +74,13 @@ defmodule Ztm.Workers.ImportStops do
   end
 
   defp extract_contents(file_path) when is_binary(file_path) do
-    folder = get_extract_folder(file_path)
-    _ = File.mkdir(folder)
+    dir = String.replace(file_path, ".zip", "")
 
-    :zip.unzip(~c'#{file_path}', [{:cwd, ~c'/tmp'}])
-  end
+    unless File.exists?(dir) do
+      :ok = File.mkdir(dir)
+    end
 
-  defp get_extract_folder(filename) when is_binary(filename) do
-    String.replace(filename, ".zip", "/")
+    :zip.unzip(~c'#{file_path}', [{:cwd, ~c'#{dir}'}])
   end
 
   defp parse_stops(file_path) do
