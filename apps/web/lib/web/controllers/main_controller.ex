@@ -14,7 +14,7 @@ defmodule Web.V1.MainController do
   end
 
   def search(conn, %{"pattern" => pattern}) do
-    stops = Ztm.get_all_by_pattern(pattern)
+    stops = Ztm.get_all_stops_by_pattern(pattern)
 
     conn |> render("stops.json", stops: stops)
   end

@@ -1,5 +1,5 @@
 defmodule Ztm do
-  defdelegate get_all_by_pattern(pattern),
+  defdelegate get_all_stops_by_pattern(pattern),
     to: Ztm.Stops.GetAllByPattern,
     as: :call
 
