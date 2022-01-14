@@ -157,4 +157,8 @@ modules.xml
 .AppleDouble
 .LSOverride
 
+# dialyzer PLTs
+/priv/plts/*.plt
+/priv/plts/*.plt.hash
+
 # End of https://www.toptal.com/developers/gitignore/api/intellij+all,visualstudiocode,elixir,phoenix
