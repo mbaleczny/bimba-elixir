@@ -17,6 +17,23 @@ defmodule Ztm.Stops.Stop do
 
   @fields [:stop_id, :stop_code, :stop_name, :stop_lat, :stop_lon, :zone_id]
 
+  @spec get_all_by_name_pattern(binary()) :: list(__MODULE__.t())
+  def get_all_by_name_pattern(pattern) do
+    tsquery_string = to_tsquery_string(pattern)
+
+    __MODULE__
+    |> where(
+      [s],
+      fragment(
+        "to_tsvector('simple', unaccent(?)) @@ to_tsquery('simple', unaccent(?))",
+        s.stop_name,
+        ^tsquery_string
+      )
+    )
+    |> order_by(asc: :stop_name)
+    |> Repo.all()
+  end
+
   @spec delete_by_id(binary()) :: {integer(), [term()]}
   def delete_by_id(id) do
     __MODULE__

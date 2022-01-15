@@ -3,6 +3,7 @@ defmodule Postgres.Schema do
     quote do
       use Ecto.Schema
       import Ecto.Changeset
+      import Postgres.TSQuery
       alias Postgres.Repo
 
       @primary_key {:id, :binary_id, autogenerate: true}
