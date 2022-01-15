@@ -37,9 +37,12 @@ defmodule Web.MixProject do
       {:phoenix_ecto, "~> 4.4"},
       {:phoenix_live_dashboard, "~> 0.6"},
       {:plug_cowboy, "~> 2.5"},
-      {:postgres, in_umbrella: true},
       {:telemetry_metrics, "~> 0.6"},
-      {:telemetry_poller, "~> 1.0"}
+      {:telemetry_poller, "~> 1.0"},
+
+      # umbrella,
+      {:postgres, in_umbrella: true},
+      {:ztm, in_umbrella: true}
     ]
   end
 
