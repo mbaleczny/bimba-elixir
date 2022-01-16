@@ -25,7 +25,8 @@ defmodule Postgres.Umbrella.MixProject do
     [
       flags: [:error_handling, :race_conditions, :underspecs, :unmatched_returns],
       ignore_warnings: ".dialyzerignore",
-      plt_add_apps: [:mix]
+      plt_add_apps: [:mix],
+      plt_file: {:no_warn, "priv/plts/dialyzer.plt"}
     ]
   end
 
