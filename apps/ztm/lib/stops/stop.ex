@@ -17,6 +17,13 @@ defmodule Ztm.Stops.Stop do
 
   @fields [:stop_id, :stop_code, :stop_name, :stop_lat, :stop_lon, :zone_id]
 
+  @doc false
+  def create(params) do
+    %__MODULE__{}
+    |> changeset(params)
+    |> Repo.insert()
+  end
+
   @spec get_all_by_name_pattern(binary()) :: list(__MODULE__.t())
   def get_all_by_name_pattern(pattern) do
     tsquery_string = to_tsquery_string(pattern)
