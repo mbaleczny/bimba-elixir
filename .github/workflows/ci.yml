@@ -127,3 +127,26 @@ jobs:
         run: mix dialyzer
       - name: Run credo
         run: mix credo --strict
+
+  format:
+    name: Run format test
+    needs: dependencies
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        elixir: [ '1.13.1' ]
+        otp: [ '24.2' ]
+    steps:
+      - name: Cancel previous runs
+        uses: styfle/cancel-workflow-action@0.9.0
+        with:
+          access_token: ${{ github.token }}
+      - name: Checkout Github repo
+        uses: actions/checkout@v2
+      - name: Set up an Erlang/OTP environment
+        uses: erlef/setup-beam@v1
+        with:
+          elixir-version: ${{ matrix.elixir }}
+          otp-version: ${{ matrix.otp }}
+      - name: Run format test
+        run: mix format --check-formatted --dry-run
