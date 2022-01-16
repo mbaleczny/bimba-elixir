@@ -7,10 +7,49 @@ on:
     branches: [ main ]
 
 jobs:
-  build:
-
-    name: Build and test
+  dependencies:
+    name: Fetch and compile dependencies
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        elixir: ['1.13.1']
+        otp: ['24.2']
+    steps:
+      - name: Cancel previous runs
+        uses: styfle/cancel-workflow-action@0.9.0
+        with:
+          access_token: ${{ github.token }}
+      - name: Checkout Github repo
+        uses: actions/checkout@v2
+      - name: Set up an Erlang/OTP environment
+        uses: erlef/setup-beam@v1
+        with:
+          elixir-version: ${{ matrix.elixir }}
+          otp-version: ${{ matrix.otp }}
+      - name: Retrieve cached dependencies
+        uses: actions/cache@v2
+        id: mix-cache
+        with:
+          path: |
+            deps
+            _build
+          key: ${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}-${{ hashFiles('mix.lock') }}
+      - name: Install dependencies
+        if: steps.mix-cache.outputs.cache-hit != 'true'
+        run: |
+          mix local.rebar --force
+          mix local.hex --force
+          mix deps.get
+          mix deps.compile
+
+  test:
+    name: Run tests
+    needs: dependencies
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        elixir: [ '1.13.1' ]
+        otp: [ '24.2' ]
     services:
       db:
         image: postgres:latest
@@ -19,22 +58,58 @@ jobs:
           POSTGRES_PASSWORD: postgres
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
     steps:
-      - uses: actions/checkout@v2
-      - name: Set up Elixir
-        uses: erlef/setup-beam@988e02bfe678367a02564f65ca2e37726dc0268f
+      - name: Cancel previous runs
+        uses: styfle/cancel-workflow-action@0.9.0
         with:
-          elixir-version: '1.13.1'
-          otp-version: '24.2'
-      - name: Restore dependencies cache
+          access_token: ${{ github.token }}
+      - name: Checkout Github repo
+        uses: actions/checkout@v2
+      - name: Set up an Erlang/OTP environment
+        uses: erlef/setup-beam@v1
+        with:
+          elixir-version: ${{ matrix.elixir }}
+          otp-version: ${{ matrix.otp }}
+      - name: Retrieve cached dependencies
         uses: actions/cache@v2
+        id: mix-cache
         with:
-          path: deps
-          key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
+          path: |
+            deps
+            _build
+          key: ${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}-${{ hashFiles('mix.lock') }}
           restore-keys: ${{ runner.os }}-mix-
-      - name: Install dependencies
-        run: mix deps.get
       - name: Run tests
         run: mix test
+
+  dialyzer:
+    name: Run dialyzer and credo
+    needs: dependencies
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        elixir: [ '1.13.1' ]
+        otp: [ '24.2' ]
+    steps:
+      - name: Cancel previous runs
+        uses: styfle/cancel-workflow-action@0.9.0
+        with:
+          access_token: ${{ github.token }}
+      - name: Checkout Github repo
+        uses: actions/checkout@v2
+      - name: Set up an Erlang/OTP environment
+        uses: erlef/setup-beam@v1
+        with:
+          elixir-version: ${{ matrix.elixir }}
+          otp-version: ${{ matrix.otp }}
+      - name: Retrieve cached dependencies
+        uses: actions/cache@v2
+        id: mix-cache
+        with:
+          path: |
+            deps
+            _build
+          key: ${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}-${{ hashFiles('mix.lock') }}
+          restore-keys: ${{ runner.os }}-mix-
       - name: Restore PLT cache
         uses: actions/cache@v2
         id: plt_cache
@@ -45,9 +120,10 @@ jobs:
             ${{ runner.os }}-${{ steps.beam.outputs.elixir-version }}-${{ steps.beam.outputs.otp-version }}-plt
           path: |
             priv/plts
-      # Create PLTs if no cache was found
       - name: Create PLTs
         if: steps.plt_cache.outputs.cache-hit != 'true'
         run: mix dialyzer --plt
       - name: Run dialyzer
         run: mix dialyzer
+      - name: Run credo
+        run: mix credo --strict
